@@ -1,0 +1,20 @@
+# Neovim
+*.swp
+*.swo
+*~
+
+# Lua
+*.luac
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+
+# Documentation
+doc/tags
+
+# Test
+.tests/
