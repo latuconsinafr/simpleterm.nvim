@@ -28,7 +28,7 @@ M.defaults = {
 
   -- Keymaps (set to false to disable default keymaps)
   keymaps = {
-    toggle = "<A-i>", -- Alt+i to toggle terminal (false to disable)
+    toggle = "\\", -- \ to toggle terminal (false to disable)
   },
 }
 
@@ -38,6 +38,7 @@ M.options = {}
 -- Setup configuration by merging user options with defaults
 function M.setup(opts)
   M.options = vim.tbl_deep_extend("force", {}, M.defaults, opts or {})
+
   return M.options
 end
 

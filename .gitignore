@@ -9,6 +9,9 @@
 # macOS
 .DS_Store
 
+# BUT keep assets (screenshots)
+!.github/assets/
+
 # Editor
 .vscode/
 .idea/

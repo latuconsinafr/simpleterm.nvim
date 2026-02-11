@@ -14,6 +14,7 @@ local _initialized = false
 function M.setup(opts)
   if _initialized then
     vim.notify("simpleterm.nvim: Already initialized", vim.log.levels.WARN)
+
     return
   end
 
@@ -26,6 +27,7 @@ function M.setup(opts)
   -- Re-setup highlights when colorscheme changes
   vim.api.nvim_create_autocmd("ColorScheme", {
     group = vim.api.nvim_create_augroup("SimpletermHighlights", { clear = true }),
+
     callback = function()
       highlights.setup()
     end,
@@ -33,6 +35,7 @@ function M.setup(opts)
 
   -- Setup default keymap if configured
   local user_config = config.get()
+
   if user_config.keymaps.toggle then
     vim.keymap.set({ "n", "t" }, user_config.keymaps.toggle, function()
       M.toggle()

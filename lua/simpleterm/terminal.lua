@@ -14,6 +14,7 @@ local state = {
 -- Get mode display text with optional position info
 local function get_mode_text()
   local opts = config.get()
+
   if not opts.footer.enabled or not opts.footer.show_mode then
     return ""
   end
@@ -26,8 +27,10 @@ local function get_mode_text()
   if opts.footer.show_position and (mode == "nt" or mode == "n") then
     if state.buf and vim.api.nvim_buf_is_valid(state.buf) then
       local ok, cursor = pcall(vim.api.nvim_win_get_cursor, state.win)
+
       if ok and state.win and vim.api.nvim_win_is_valid(state.win) then
         local total_lines = vim.api.nvim_buf_line_count(state.buf)
+
         extra_info = string.format(" [%d/%d]", cursor[1], total_lines)
       end
     end
@@ -36,6 +39,7 @@ local function get_mode_text()
   -- Show search count if searching
   if opts.footer.show_search_count and vim.v.hlsearch == 1 and vim.fn.getreg("/") ~= "" then
     local ok, search_count = pcall(vim.fn.searchcount, { recompute = 1, maxcount = -1 })
+
     if ok and search_count.total > 0 then
       extra_info = string.format(" [%d/%d]", search_count.current, search_count.total)
     end
@@ -67,6 +71,7 @@ end
 -- Setup autocmds for footer updates
 local function setup_footer_autocmds()
   local opts = config.get()
+
   if not opts.footer.enabled then
     return
   end
@@ -137,7 +142,7 @@ end
 -- Check if terminal buffer is visible in any window
 local function is_terminal_visible()
   if not state.buf or not vim.api.nvim_buf_is_valid(state.buf) then
-    return false
+    return false, nil
   end
 
   for _, win in ipairs(vim.api.nvim_list_wins()) do
@@ -146,7 +151,7 @@ local function is_terminal_visible()
     end
   end
 
-  return false
+  return false, nil
 end
 
 -- Toggle terminal visibility
@@ -155,10 +160,12 @@ function M.toggle()
 
   -- Check if terminal is already visible
   local visible, win = is_terminal_visible()
-  if visible then
+
+  if visible and win then
     -- Close the window
     vim.api.nvim_win_close(win, true)
     state.win = nil
+
     return
   end
 
@@ -177,7 +184,7 @@ function M.toggle()
 
   -- Start terminal if buffer is empty (first time)
   local is_empty = vim.api.nvim_buf_line_count(state.buf) == 1
-    and vim.api.nvim_buf_get_lines(state.buf, 0, 1, false)[1] == ""
+      and vim.api.nvim_buf_get_lines(state.buf, 0, 1, false)[1] == ""
 
   if is_empty then
     vim.fn.termopen(opts.terminal.shell)
@@ -199,7 +206,7 @@ end
 -- Close terminal (if open)
 function M.close()
   local visible, win = is_terminal_visible()
-  if visible then
+  if visible and win then
     vim.api.nvim_win_close(win, true)
     state.win = nil
   end

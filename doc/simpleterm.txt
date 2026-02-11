@@ -1,0 +1,387 @@
+*simpleterm.txt*     A minimal, fast floating terminal plugin for Neovim
+
+==============================================================================
+Table of Contents                                    *simpleterm-contents*
+
+1. Introduction .................................... |simpleterm-introduction|
+2. Requirements .................................... |simpleterm-requirements|
+3. Installation .................................... |simpleterm-installation|
+4. Quick Start ..................................... |simpleterm-quickstart|
+5. Configuration ................................... |simpleterm-configuration|
+   5.1 Window ...................................... |simpleterm-window|
+   5.2 Terminal .................................... |simpleterm-terminal|
+   5.3 Footer ...................................... |simpleterm-footer|
+   5.4 Keymaps ..................................... |simpleterm-keymaps|
+6. Commands ........................................ |simpleterm-commands|
+7. API ............................................. |simpleterm-api|
+8. Highlights ...................................... |simpleterm-highlights|
+9. Tips ............................................ |simpleterm-tips|
+10. License ........................................ |simpleterm-license|
+
+==============================================================================
+1. Introduction                                   *simpleterm-introduction*
+
+simpleterm.nvim is a minimal, fast, and beautiful floating terminal plugin
+for Neovim. It provides a persistent floating terminal that can be toggled
+with a single keymap.
+
+Features:~
+  • Fast - Optimized for instant toggle performance
+  • Beautiful - Smart mode indicator with position tracking
+  • Configurable - Sensible defaults, fully customizable
+  • Zero dependencies - Pure Lua, works out of the box
+  • Persistent - Terminal state preserved when toggled
+  • Colorscheme aware - Automatically adapts to your theme
+
+==============================================================================
+2. Requirements                                   *simpleterm-requirements*
+
+- Neovim >= 0.8.0
+- A Nerd Font (for mode icons)
+
+==============================================================================
+3. Installation                                   *simpleterm-installation*
+
+Using lazy.nvim:~
+>lua
+    {
+      "latuconsinafr/simpleterm.nvim",
+      config = function()
+        require("simpleterm").setup()
+      end,
+    }
+<
+
+Using packer.nvim:~
+>lua
+    use {
+      "latuconsinafr/simpleterm.nvim",
+      config = function()
+        require("simpleterm").setup()
+      end,
+    }
+<
+
+==============================================================================
+4. Quick Start                                      *simpleterm-quickstart*
+
+Zero configuration setup:~
+>lua
+    require("simpleterm").setup()
+<
+
+Press `<Alt-i>` to toggle the terminal.
+
+==============================================================================
+5. Configuration                                  *simpleterm-configuration*
+
+The |simpleterm.setup()| function accepts a table with the following options:
+
+>lua
+    require("simpleterm").setup({
+      window = {
+        width = 0.8,
+        height = 0.8,
+        border = "rounded",
+        row_offset = 0.1,
+      },
+      terminal = {
+        shell = vim.o.shell,
+        start_in_insert = true,
+      },
+      footer = {
+        enabled = true,
+        position = "right",
+        show_mode = true,
+        show_position = true,
+        show_search_count = true,
+      },
+      keymaps = {
+        toggle = "<A-i>",
+      },
+    })
+<
+
+------------------------------------------------------------------------------
+5.1 Window Options                                    *simpleterm-window*
+
+window.width                                    *simpleterm-window-width*
+    Type: `number`
+    Default: `0.8`
+
+    Window width. If a float between 0.0 and 1.0, it's treated as a
+    percentage of the editor width. If an integer, it's the exact column
+    count.
+
+window.height                                  *simpleterm-window-height*
+    Type: `number`
+    Default: `0.8`
+
+    Window height. If a float between 0.0 and 1.0, it's treated as a
+    percentage of the editor height. If an integer, it's the exact row count.
+
+window.border                                  *simpleterm-window-border*
+    Type: `string`
+    Default: `"rounded"`
+
+    Border style for the floating window.
+    Valid values: "none", "single", "double", "rounded", "solid", "shadow"
+
+window.row_offset                          *simpleterm-window-row-offset*
+    Type: `number`
+    Default: `0.1`
+
+    Vertical offset for window position.
+    • 0.0 = centered
+    • Negative values = move up
+    • Positive values = move down
+
+------------------------------------------------------------------------------
+5.2 Terminal Options                                *simpleterm-terminal*
+
+terminal.shell                                  *simpleterm-terminal-shell*
+    Type: `string`
+    Default: `vim.o.shell`
+
+    Shell to use in the terminal. Defaults to the system shell.
+
+terminal.start_in_insert                *simpleterm-terminal-start-in-insert*
+    Type: `boolean`
+    Default: `true`
+
+    Automatically enter insert mode when opening the terminal.
+
+------------------------------------------------------------------------------
+5.3 Footer Options                                    *simpleterm-footer*
+
+footer.enabled                                  *simpleterm-footer-enabled*
+    Type: `boolean`
+    Default: `true`
+
+    Show or hide the footer with mode indicator.
+
+footer.position                                *simpleterm-footer-position*
+    Type: `string`
+    Default: `"right"`
+
+    Position of the footer text.
+    Valid values: "left", "center", "right"
+
+footer.show_mode                              *simpleterm-footer-show-mode*
+    Type: `boolean`
+    Default: `true`
+
+    Show mode icon in the footer.
+
+footer.show_position                      *simpleterm-footer-show-position*
+    Type: `boolean`
+    Default: `true`
+
+    Show line position [current/total] in normal mode.
+
+footer.show_search_count              *simpleterm-footer-show-search-count*
+    Type: `boolean`
+    Default: `true`
+
+    Show search match count [current/total] when searching.
+
+------------------------------------------------------------------------------
+5.4 Keymap Options                                    *simpleterm-keymaps*
+
+keymaps.toggle                                  *simpleterm-keymaps-toggle*
+    Type: `string` or `false`
+    Default: `"<A-i>"`
+
+    Keymap to toggle the terminal. Set to `false` to disable the default
+    keymap. Works in both normal and terminal mode.
+
+==============================================================================
+6. Commands                                          *simpleterm-commands*
+
+:SimpletermToggle                                      *:SimpletermToggle*
+    Toggle the floating terminal. If the terminal is open, close it. If it's
+    closed, open it.
+
+:SimpletermOpen                                          *:SimpletermOpen*
+    Open the floating terminal. If it's already open, do nothing.
+
+:SimpletermClose                                        *:SimpletermClose*
+    Close the floating terminal. If it's already closed, do nothing.
+
+==============================================================================
+7. API                                                      *simpleterm-api*
+
+require("simpleterm").setup({opts})                  *simpleterm.setup()*
+    Initialize the plugin with the given configuration options.
+
+    Parameters:~
+      • {opts} (table|nil) Configuration options (see |simpleterm-configuration|)
+
+    Example:~
+>lua
+        require("simpleterm").setup({
+          window = { width = 0.9, height = 0.9 },
+        })
+<
+
+require("simpleterm").toggle()                      *simpleterm.toggle()*
+    Toggle the floating terminal visibility.
+
+    Example:~
+>lua
+        vim.keymap.set("n", "<leader>tt", require("simpleterm").toggle)
+<
+
+require("simpleterm").open()                          *simpleterm.open()*
+    Open the floating terminal. If already open, do nothing.
+
+    Example:~
+>lua
+        require("simpleterm").open()
+<
+
+require("simpleterm").close()                        *simpleterm.close()*
+    Close the floating terminal. If already closed, do nothing.
+
+    Example:~
+>lua
+        require("simpleterm").close()
+<
+
+require("simpleterm").get_state()                *simpleterm.get_state()*
+    Get the current state of the terminal.
+
+    Returns:~
+      • {buf} (number|nil) Terminal buffer handle
+      • {win} (number|nil) Terminal window handle
+      • {is_valid} (boolean) Whether the buffer is valid
+      • {is_visible} (boolean) Whether the terminal is visible
+
+    Example:~
+>lua
+        local state = require("simpleterm").get_state()
+        if state.is_visible then
+          print("Terminal is open")
+        end
+<
+
+require("simpleterm").get_config()              *simpleterm.get_config()*
+    Get the current configuration.
+
+    Returns:~
+      • (table) Current configuration options
+
+    Example:~
+>lua
+        local config = require("simpleterm").get_config()
+        print(vim.inspect(config))
+<
+
+==============================================================================
+8. Highlights                                        *simpleterm-highlights*
+
+SimpletermFooter                                        *hl-SimpletermFooter*
+    Highlight group for the footer text and background.
+
+    By default, this is linked to |FloatBorder| for automatic colorscheme
+    integration.
+
+    To customize, override after your colorscheme is loaded:~
+>lua
+        vim.api.nvim_set_hl(0, "SimpletermFooter", {
+          fg = "#f6c177", -- Text color
+          bg = "#1f1d2e", -- Background color
+          bold = true,
+        })
+<
+
+    For Rose Pine users:~
+>lua
+        -- Match Rose Pine's gold accent
+        vim.api.nvim_set_hl(0, "SimpletermFooter", {
+          fg = "#f6c177", -- Rose Pine gold
+          bg = "#1f1d2e", -- Rose Pine base background
+          bold = true,
+        })
+<
+
+==============================================================================
+9. Tips                                                  *simpleterm-tips*
+
+Escaping Terminal Mode~
+
+Press `<C-\><C-n>` to exit terminal mode (standard Neovim behavior).
+
+For easier escaping, add this to your config:~
+>lua
+    vim.keymap.set("t", "<Esc>", "<C-\\><C-n>", {
+      desc = "Exit terminal mode"
+    })
+<
+
+Custom Keymaps~
+
+Disable the default keymap and set your own:~
+>lua
+    require("simpleterm").setup({
+      keymaps = { toggle = false },
+    })
+
+    -- Use <C-`> instead
+    vim.keymap.set({"n", "t"}, "<C-`>", require("simpleterm").toggle, {
+      desc = "Toggle terminal"
+    })
+<
+
+Larger Terminal~
+
+Create a nearly fullscreen terminal:~
+>lua
+    require("simpleterm").setup({
+      window = {
+        width = 0.95,
+        height = 0.95,
+        row_offset = 0,
+      },
+    })
+<
+
+Minimal Footer~
+
+Show only the mode icon without position/search info:~
+>lua
+    require("simpleterm").setup({
+      footer = {
+        show_position = false,
+        show_search_count = false,
+      },
+    })
+<
+
+==============================================================================
+10. License                                          *simpleterm-license*
+
+MIT License
+
+Copyright (c) 2026 latuconsinafr
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:

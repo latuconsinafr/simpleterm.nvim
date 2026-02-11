@@ -2,6 +2,12 @@
 
 A minimal, fast, and beautiful floating terminal plugin for Neovim.
 
+
+## 📸 Screenshots
+
+![simpleterm demo](.github/assets/demo.gif)
+
+
 ## ✨ Features
 
 - 🚀 **Fast** - Optimized for instant toggle performance
@@ -9,7 +15,8 @@ A minimal, fast, and beautiful floating terminal plugin for Neovim.
 - ⚙️ **Configurable** - Sensible defaults, fully customizable
 - 🎯 **Zero dependencies** - Pure Lua, works out of the box
 - 🔄 **Persistent** - Terminal state preserved when toggled
-- 🌈 **Colorscheme aware** - Automatically matches your theme
+- 🌈 **Colorscheme aware** - Automatically adapts to your theme
+- 📚 **Well documented** - Built-in help docs (`:help simpleterm`)
 
 ## 📦 Installation
 
@@ -66,7 +73,7 @@ require("simpleterm").setup({
     border = "rounded", -- Border style
   },
   keymaps = {
-    toggle = "<A-i>",   -- Alt+i to toggle (set to false to disable)
+    toggle = "\\",   -- \ to toggle (set to false to disable)
   },
 })
 ```
@@ -105,7 +112,7 @@ require("simpleterm").setup({
 
   -- Keymaps
   keymaps = {
-    toggle = "<A-i>",         -- Set to false to disable default keymap
+    toggle = "\\",         -- Set to false to disable default keymap
   },
 })
 ```
@@ -153,7 +160,7 @@ vim.keymap.set({"n", "t"}, "<C-\\>", require("simpleterm").toggle, { desc = "Tog
 
 ### Default Keymap
 
-- `<Alt-i>` - Toggle terminal (works in normal and terminal mode)
+- `\` - Toggle terminal (works in normal and terminal mode)
 
 ### Commands
 
@@ -185,18 +192,27 @@ local config = simpleterm.get_config()
 
 ## 🎨 Customizing Colors
 
-The plugin automatically adapts to your colorscheme. If you want to customize the footer color:
+The plugin automatically adapts to your colorscheme by linking to `FloatBorder`.
+
+To customize the footer appearance, override the `SimpletermFooter` highlight group:
 
 ```lua
--- After colorscheme is loaded
+-- After your colorscheme is loaded (e.g., in your init.lua after colorscheme line)
 vim.api.nvim_set_hl(0, "SimpletermFooter", {
-  fg = "#f6c177",
-  bg = "#1f1d2e",
+  fg = "#f6c177", -- Text color
+  bg = "#1f1d2e", -- Background color
   bold = true,
 })
 ```
 
 ## 📝 Tips
+
+### Help Documentation
+
+View complete documentation in Neovim:
+```vim
+:help simpleterm
+```
 
 ### Escaping Terminal Mode
 
