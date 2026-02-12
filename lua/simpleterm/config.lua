@@ -24,6 +24,18 @@ M.defaults = {
     show_mode = true,
     show_position = true, -- Show line position in normal mode
     show_search_count = true, -- Show search matches
+    -- Mode icons - customize icons for different modes
+    -- Defaults cover common terminal modes, with fallback to mode letter for others
+    mode_icons = {
+      t = "󰠠",        -- Terminal mode
+      nt = "",       -- Terminal-normal mode
+      n = "",        -- Normal mode
+      v = "󱠆",        -- Visual mode
+      V = "󱠆",        -- Visual line mode
+      ["\22"] = "󱠆",  -- Visual block mode (Ctrl-V)
+      c = "",        -- Command mode
+      -- Any undefined mode will show as uppercase letter (e.g., "R", "I")
+    },
   },
 
   -- Keymaps (set to false to disable default keymaps)

@@ -18,6 +18,12 @@ A minimal, fast, and beautiful floating terminal plugin for Neovim.
 - 🌈 **Colorscheme aware** - Automatically adapts to your theme
 - 📚 **Well documented** - Built-in help docs (`:help simpleterm`)
 
+## ⚙️ Requirements
+
+- **Neovim** >= 0.8.0
+- **[Nerd Font](https://www.nerdfonts.com/)** - Required for default mode icons
+  - Not needed if you customize `mode_icons` to use plain text (see [Custom Mode Icons](#custom-mode-icons))
+
 ## 📦 Installation
 
 ### Using [lazy.nvim](https://github.com/folke/lazy.nvim)
@@ -61,7 +67,7 @@ Just install and use! The plugin works perfectly with default settings:
 require("simpleterm").setup()
 ```
 
-Press `<Alt-i>` to toggle the terminal.
+Press `\` to toggle the terminal.
 
 ### Basic Configuration
 
@@ -108,6 +114,17 @@ require("simpleterm").setup({
     show_mode = true,         -- Show mode icon
     show_position = true,     -- Show line position [current/total]
     show_search_count = true, -- Show search matches [current/total]
+    -- Customize mode icons (or use plain text)
+    mode_icons = {
+      t = "󰠠",                -- Terminal mode
+      nt = "",               -- Terminal-normal mode
+      n = "",                -- Normal mode
+      v = "󱠆",                -- Visual mode
+      V = "󱠆",                -- Visual line mode
+      ["\22"] = "󱠆",          -- Visual block mode (Ctrl-V)
+      c = "",                -- Command mode
+      -- Any undefined mode will show as uppercase letter (e.g., "R", "I")
+    },
   },
 
   -- Keymaps
@@ -154,6 +171,26 @@ require("simpleterm").setup({
 
 -- Set your own keymap
 vim.keymap.set({"n", "t"}, "<C-\\>", require("simpleterm").toggle, { desc = "Toggle terminal" })
+```
+
+#### Custom Mode Icons
+
+Use plain text if you don't have a Nerd Font installed:
+
+```lua
+require("simpleterm").setup({
+  footer = {
+    mode_icons = {
+      t = "[TERM]",    -- Plain text - no Nerd Font needed!
+      nt = "[NORM]",
+      n = "N",
+      v = "V",
+      V = "V-LINE",
+      c = ":",
+      -- Any undefined mode shows as uppercase letter
+    },
+  },
+})
 ```
 
 ## 🎮 Usage

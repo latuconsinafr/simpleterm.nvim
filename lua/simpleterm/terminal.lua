@@ -20,7 +20,7 @@ local function get_mode_text()
   end
 
   local mode = vim.api.nvim_get_mode().mode
-  local mode_icon = highlights.get_mode_icon(mode)
+  local mode_icon = highlights.get_mode_icon(mode, opts.footer.mode_icons)
   local extra_info = ""
 
   -- Show position in normal/terminal-normal mode

@@ -37,7 +37,11 @@ Features:~
 2. Requirements                                   *simpleterm-requirements*
 
 - Neovim >= 0.8.0
-- A Nerd Font (for mode icons)
+- A Nerd Font (required for default mode icons)
+  https://www.nerdfonts.com/
+
+  Note: Not required if you customize mode_icons to use plain text.
+  See |simpleterm-footer-mode-icons| for details.
 
 ==============================================================================
 3. Installation                                   *simpleterm-installation*
@@ -70,7 +74,7 @@ Zero configuration setup:~
     require("simpleterm").setup()
 <
 
-Press `<Alt-i>` to toggle the terminal.
+Press `\` to toggle the terminal.
 
 ==============================================================================
 5. Configuration                                  *simpleterm-configuration*
@@ -95,9 +99,18 @@ The |simpleterm.setup()| function accepts a table with the following options:
         show_mode = true,
         show_position = true,
         show_search_count = true,
+        mode_icons = {
+          t = "󰠠",        
+          nt = "",       
+          n = "",        
+          v = "󱠆",        
+          V = "󱠆",        
+          ["\22"] = "󱠆",  
+          c = "",        
+        },
       },
       keymaps = {
-        toggle = "<A-i>",
+        toggle = "\\",
       },
     })
 <
@@ -185,12 +198,44 @@ footer.show_search_count              *simpleterm-footer-show-search-count*
 
     Show search match count [current/total] when searching.
 
+footer.mode_icons                          *simpleterm-footer-mode-icons*
+    Type: `table`
+    Default: See below
+
+    Customize the icons (or text) shown for each mode in the footer.
+    Modes not defined will fallback to showing the uppercase mode letter.
+
+    Note: Default icons require a Nerd Font (https://www.nerdfonts.com/).
+    Use plain text if you don't have a Nerd Font installed.
+
+    Default icons:~
+>lua
+        mode_icons = {
+          t = "󰠠",        -- Terminal mode
+          nt = "",       -- Terminal-normal mode
+          n = "",        -- Normal mode
+          v = "󱠆",        -- Visual mode
+          V = "󱠆",        -- Visual line mode
+          ["\22"] = "󱠆",  -- Visual block mode (Ctrl-V)
+          c = "",        -- Command mode
+        }
+<
+
+    You can use any string, including plain text:~
+>lua
+        mode_icons = {
+          t = "[TERM]",
+          nt = "[NORM]",
+          n = "N",
+        }
+<
+
 ------------------------------------------------------------------------------
 5.4 Keymap Options                                    *simpleterm-keymaps*
 
 keymaps.toggle                                  *simpleterm-keymaps-toggle*
     Type: `string` or `false`
-    Default: `"<A-i>"`
+    Default: `"\\"`
 
     Keymap to toggle the terminal. Set to `false` to disable the default
     keymap. Works in both normal and terminal mode.
@@ -294,17 +339,6 @@ SimpletermFooter                                        *hl-SimpletermFooter*
           bold = true,
         })
 <
-
-    For Rose Pine users:~
->lua
-        -- Match Rose Pine's gold accent
-        vim.api.nvim_set_hl(0, "SimpletermFooter", {
-          fg = "#f6c177", -- Rose Pine gold
-          bg = "#1f1d2e", -- Rose Pine base background
-          bold = true,
-        })
-<
-
 ==============================================================================
 9. Tips                                                  *simpleterm-tips*
 

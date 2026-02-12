@@ -12,20 +12,10 @@ function M.setup()
 end
 
 -- Get mode icon based on current mode
-function M.get_mode_icon(mode)
-  local icons = {
-    t = "󰠠", -- Terminal mode
-    nt = "", -- Normal mode (in terminal)
-    n = "", -- Normal mode
-    v = "󱠆", -- Visual mode
-    V = "󱠆", -- Visual line mode
-    ["\22"] = "󱠆", -- Visual block mode (Ctrl-V)
-    c = "󰻃", -- Command mode
-    i = "󰠠", -- Insert mode
-    R = "󰠠", -- Replay mode
-  }
-
-  return icons[mode] or mode:upper()
+-- Uses icons from config with fallback to uppercase mode letter
+function M.get_mode_icon(mode, mode_icons)
+  -- Use provided icons or fallback to uppercase mode letter
+  return mode_icons[mode] or mode:upper()
 end
 
 return M
