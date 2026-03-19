@@ -24,12 +24,14 @@ M.defaults = {
     show_mode = true,
     show_position = true, -- Show line position in normal mode
     show_search_count = true, -- Show search matches
+    yank_icon = "󰆏",  -- Icon shown briefly after a clean yank (false to disable)
     -- Mode icons - customize icons for different modes
     -- Defaults cover common terminal modes, with fallback to mode letter for others
     mode_icons = {
       t = "󰠠",        -- Terminal mode
       nt = "",       -- Terminal-normal mode
       n = "",        -- Normal mode
+      no = "󰪣",       -- Operator-pending mode (e.g. while typing gy + motion)
       v = "󱠆",        -- Visual mode
       V = "󱠆",        -- Visual line mode
       ["\22"] = "󱠆",  -- Visual block mode (Ctrl-V)
@@ -40,7 +42,8 @@ M.defaults = {
 
   -- Keymaps (set to false to disable default keymaps)
   keymaps = {
-    toggle = "\\", -- \ to toggle terminal (false to disable)
+    toggle = "\\",      -- \ to toggle terminal (false to disable)
+    clean_yank = "gy",  -- yank visual selection without PTY line breaks (false to disable)
   },
 }
 

@@ -12,6 +12,8 @@ Table of Contents                                    *simpleterm-contents*
    5.2 Terminal .................................... |simpleterm-terminal|
    5.3 Footer ...................................... |simpleterm-footer|
    5.4 Keymaps ..................................... |simpleterm-keymaps|
+      5.4.1 toggle ................................ |simpleterm-keymaps-toggle|
+      5.4.2 clean_yank ........................... |simpleterm-keymaps-clean-yank|
 6. Commands ........................................ |simpleterm-commands|
 7. API ............................................. |simpleterm-api|
 8. Highlights ...................................... |simpleterm-highlights|
@@ -32,6 +34,7 @@ Features:~
   • Zero dependencies - Pure Lua, works out of the box
   • Persistent - Terminal state preserved when toggled
   • Colorscheme aware - Automatically adapts to your theme
+  • Smart yank - Visual yank strips PTY line breaks, with footer flash confirmation
 
 ==============================================================================
 2. Requirements                                   *simpleterm-requirements*
@@ -111,6 +114,7 @@ The |simpleterm.setup()| function accepts a table with the following options:
       },
       keymaps = {
         toggle = "\\",
+        clean_yank = "gy",
       },
     })
 <
@@ -198,6 +202,23 @@ footer.show_search_count              *simpleterm-footer-show-search-count*
 
     Show search match count [current/total] when searching.
 
+footer.yank_icon                          *simpleterm-footer-yank-icon*
+    Type: `string`, `false`, or `nil`
+    Default: `"󰆏"`
+
+    Icon briefly shown in the footer after a clean yank (`gy`) to confirm
+    the yank happened.
+
+    • Any string  — shown as the flash indicator
+    • `false`     — disables the flash entirely
+    • `nil`       — falls back to plain text `"Y"` (no Nerd Font needed)
+
+    Note: The default icon requires a Nerd Font (https://www.nerdfonts.com/).
+    For a plain text alternative:~
+>lua
+        footer = { yank_icon = "[y]" }
+<
+
 footer.mode_icons                          *simpleterm-footer-mode-icons*
     Type: `table`
     Default: See below
@@ -239,6 +260,21 @@ keymaps.toggle                                  *simpleterm-keymaps-toggle*
 
     Keymap to toggle the terminal. Set to `false` to disable the default
     keymap. Works in both normal and terminal mode.
+
+keymaps.clean_yank                          *simpleterm-keymaps-clean-yank*
+    Type: `string` or `false`
+    Default: `"gy"`
+
+    Visual mode keymap (terminal buffer only) to yank the selection with
+    PTY-inserted line breaks stripped. Terminal output is hard-wrapped by
+    the PTY at the window width, splitting one logical line into multiple
+    buffer lines. This keymap strips those artificial breaks so pasting
+    gives clean, unwrapped output.
+
+    Genuinely multi-line selections (where the user pressed Enter between
+    lines) have their newlines preserved.
+
+    Set to `false` to disable.
 
 ==============================================================================
 6. Commands                                          *simpleterm-commands*
@@ -326,7 +362,8 @@ require("simpleterm").get_config()              *simpleterm.get_config()*
 8. Highlights                                        *simpleterm-highlights*
 
 SimpletermFooter                                        *hl-SimpletermFooter*
-    Highlight group for the footer text and background.
+    Highlight group for the footer text and background. Used for both the
+    mode indicator and the yank flash icon (|simpleterm-footer-yank-icon|).
 
     By default, this is linked to |FloatBorder| for automatic colorscheme
     integration.

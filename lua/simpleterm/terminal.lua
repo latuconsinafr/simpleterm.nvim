@@ -11,6 +11,13 @@ local state = {
   augroup = nil,
 }
 
+-- Footer update debounce: coalesce rapid CursorMoved events into one update
+local footer_update_pending = false
+-- Footer text cache: skip win_set_config when display hasn't changed
+local last_footer_text = nil
+-- Yank flash: timer handle for reverting the yank indicator
+local yank_flash_timer = nil
+
 -- Get mode display text with optional position info
 local function get_mode_text()
   local opts = config.get()
@@ -48,24 +55,85 @@ local function get_mode_text()
   return mode_icon .. extra_info
 end
 
--- Update footer with current mode and info
-local function update_footer()
+-- Do the actual footer render (called after debounce)
+local function do_update_footer()
+  -- Don't overwrite the yank flash indicator while it's visible
+  if yank_flash_timer then
+    return
+  end
+
   if not state.win or not vim.api.nvim_win_is_valid(state.win) then
     return
   end
 
   local mode_text = get_mode_text()
+
   if mode_text == "" then
     return
   end
 
-  local win_config = vim.api.nvim_win_get_config(state.win)
+  local footer_text = string.format("  %s  ", mode_text)
+
+  -- Skip the expensive win_set_config call if nothing changed
+  if footer_text == last_footer_text then
+    return
+  end
+
+  last_footer_text = footer_text
+
   local opts = config.get()
 
-  win_config.footer = { { string.format("  %s  ", mode_text), "SimpletermFooter" } }
-  win_config.footer_pos = opts.footer.position
+  -- Partial update: only pass footer fields, no need to round-trip nvim_win_get_config
+  vim.api.nvim_win_set_config(state.win, {
+    footer = { { footer_text, "SimpletermFooter" } },
+    footer_pos = opts.footer.position,
+  })
+end
 
-  vim.api.nvim_win_set_config(state.win, win_config)
+-- Flash a yank indicator in the footer, then revert to normal footer
+local function flash_yank_footer()
+  if not state.win or not vim.api.nvim_win_is_valid(state.win) then
+    return
+  end
+
+  local opts = config.get()
+
+  local icon = highlights.get_yank_icon(opts.footer.yank_icon)
+
+  if not opts.footer.enabled or icon == false then
+    return
+  end
+
+  -- Cancel any pending revert from a previous flash
+  if yank_flash_timer then
+    yank_flash_timer:stop()
+    yank_flash_timer = nil
+  end
+
+  vim.api.nvim_win_set_config(state.win, {
+    footer = { { string.format("  %s  ", icon), "SimpletermFooter" } },
+    footer_pos = opts.footer.position,
+  })
+
+  yank_flash_timer = vim.defer_fn(function()
+    yank_flash_timer = nil
+    last_footer_text = nil
+    do_update_footer()
+  end, 1000)
+end
+
+-- Schedule a footer update, coalescing rapid calls (e.g. scroll events) into one
+local function update_footer()
+  if footer_update_pending then
+    return
+  end
+
+  footer_update_pending = true
+
+  vim.schedule(function()
+    footer_update_pending = false
+    do_update_footer()
+  end)
 end
 
 -- Setup autocmds for footer updates
@@ -154,6 +222,83 @@ local function is_terminal_visible()
   return false, nil
 end
 
+-- Setup buffer-local keymaps for the terminal buffer
+local function setup_terminal_keymaps()
+  local opts = config.get()
+  local key = opts.keymaps.clean_yank
+
+  if not key then
+    return
+  end
+
+  vim.keymap.set("x", key, function()
+    local text
+    -- PTY hard-wraps lines at exactly the terminal width. Lines shorter than
+    -- that ended with a real newline (user pressed Enter, genuine multi-line
+    -- output). We use this to decide whether to join lines or preserve \n.
+    local pty_width = vim.api.nvim_win_get_width(state.win)
+
+    local function join_pty_lines(lines)
+      local result = {}
+      for i, line in ipairs(lines) do
+        result[#result + 1] = line
+        if i < #lines then
+          -- PTY wrap: line filled the full width → continuation, no real newline
+          -- Real newline: line is shorter → preserve it
+          result[#result + 1] = (#line == pty_width) and "" or "\n"
+        end
+      end
+      return table.concat(result)
+    end
+
+    if vim.fn.exists("*getregion") == 1 then
+      -- Neovim 0.10+: getregion() reads getpos("v") and getpos(".") which are
+      -- live and correct inside a visual-mode callback. Returns one string per
+      -- buffer line with no newline separators.
+      local lines = vim.fn.getregion(
+        vim.fn.getpos("."),
+        vim.fn.getpos("v"),
+        { mode = vim.fn.mode() }
+      )
+      text = join_pty_lines(lines)
+    else
+      -- Neovim < 0.10: noau normal! "zy is synchronous and executes in the
+      -- current visual mode context, unlike feedkeys which re-queues keys.
+      vim.cmd('noau normal! "zy')
+      local lines = vim.split(vim.fn.getreg("z"), "\n", { plain = true })
+      text = join_pty_lines(lines)
+    end
+
+    -- Exit visual mode before scratch buffer operations. The "x" keymap callback
+    -- fires while visual mode is still technically active; nvim_buf_call would
+    -- save/restore that state and apply the scratch buffer's ggVGy selection
+    -- back onto the terminal buffer, making the whole buffer appear selected.
+    vim.api.nvim_feedkeys(
+      vim.api.nvim_replace_termcodes("<Esc>", true, false, true),
+      "x", -- execute immediately, not re-queued
+      false
+    )
+
+    -- Yank via a scratch buffer so Neovim's full yank pipeline fires —
+    -- this respects clipboard=unnamedplus, clipboard=unnamed, TextYankPost
+    -- hooks, and any other register/clipboard config automatically.
+    -- nvim_buf_set_lines requires each element to be newline-free, so split first.
+    local scratch_lines = vim.split(text, "\n", { plain = true })
+    local scratch = vim.api.nvim_create_buf(false, true)
+    vim.api.nvim_buf_set_lines(scratch, 0, -1, false, scratch_lines)
+    vim.api.nvim_buf_call(scratch, function()
+      if #scratch_lines == 1 then
+        vim.cmd("normal! 0y$")   -- charwise: single logical line
+      else
+        vim.cmd("normal! ggVGy") -- linewise: genuinely multi-line selection
+      end
+    end)
+    vim.api.nvim_buf_delete(scratch, { force = true })
+
+    flash_yank_footer()
+  end, { buffer = state.buf, desc = "Clean yank selection (without PTY line breaks)" })
+end
+
 -- Toggle terminal visibility
 function M.toggle()
   local opts = config.get()
@@ -165,6 +310,7 @@ function M.toggle()
     -- Close the window
     vim.api.nvim_win_close(win, true)
     state.win = nil
+    last_footer_text = nil
 
     return
   end
@@ -190,6 +336,14 @@ function M.toggle()
     vim.fn.termopen(opts.terminal.shell)
   end
 
+  -- Force wrap AFTER termopen: TermOpen autocmds (common in user configs) fire
+  -- inside termopen() and often set nowrap, which would override an earlier setting.
+  vim.wo[state.win].wrap = true
+
+  -- Re-register keymaps every open so plugin reloads always get the latest version
+  -- on the correct buffer. vim.keymap.set replaces any existing mapping safely.
+  setup_terminal_keymaps()
+
   -- Enter insert mode if configured
   if opts.terminal.start_in_insert then
     vim.cmd("startinsert")
@@ -209,6 +363,7 @@ function M.close()
   if visible and win then
     vim.api.nvim_win_close(win, true)
     state.win = nil
+    last_footer_text = nil
   end
 end
 

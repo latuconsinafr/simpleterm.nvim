@@ -16,6 +16,7 @@ A minimal, fast, and beautiful floating terminal plugin for Neovim.
 - 🎯 **Zero dependencies** - Pure Lua, works out of the box
 - 🔄 **Persistent** - Terminal state preserved when toggled
 - 🌈 **Colorscheme aware** - Automatically adapts to your theme
+- 📋 **Smart yank** - Visual yank strips PTY line breaks, with footer flash confirmation
 - 📚 **Well documented** - Built-in help docs (`:help simpleterm`)
 
 ## ⚙️ Requirements
@@ -114,6 +115,7 @@ require("simpleterm").setup({
     show_mode = true,         -- Show mode icon
     show_position = true,     -- Show line position [current/total]
     show_search_count = true, -- Show search matches [current/total]
+    yank_icon = "󰆏",          -- Icon flashed after a clean yank (false to disable, nil = fallback "Y")
     -- Customize mode icons (or use plain text)
     mode_icons = {
       t = "󰠠",                -- Terminal mode
@@ -130,6 +132,7 @@ require("simpleterm").setup({
   -- Keymaps
   keymaps = {
     toggle = "\\",         -- Set to false to disable default keymap
+    clean_yank = "gy",     -- Yank visual selection without PTY line breaks (false to disable)
   },
 })
 ```
@@ -173,6 +176,18 @@ require("simpleterm").setup({
 vim.keymap.set({"n", "t"}, "<C-\\>", require("simpleterm").toggle, { desc = "Toggle terminal" })
 ```
 
+#### Custom Yank Icon
+
+Use plain text if you don't have a Nerd Font installed (falls back to `"Y"` automatically if `nil`):
+
+```lua
+require("simpleterm").setup({
+  footer = {
+    yank_icon = "[y]", -- plain text fallback, no Nerd Font needed
+  },
+})
+```
+
 #### Custom Mode Icons
 
 Use plain text if you don't have a Nerd Font installed:
@@ -195,9 +210,19 @@ require("simpleterm").setup({
 
 ## 🎮 Usage
 
-### Default Keymap
+### Default Keymaps
 
 - `\` - Toggle terminal (works in normal and terminal mode)
+- `gy` - Yank visual selection without PTY line breaks (visual mode, terminal buffer only)
+
+### Smart Yank (`gy`)
+
+Terminal output is hard-wrapped by the PTY at the window width, splitting one logical line into multiple buffer lines. `gy` in visual mode strips those artificial breaks before yanking, so pasting gives clean output.
+
+- Single logical line selected → yanked as one clean line (no extra newlines)
+- Genuinely multi-line selection → newlines preserved
+- Works with all clipboard configurations (`clipboard=unnamedplus`, etc.)
+- Footer flashes the yank icon briefly to confirm
 
 ### Commands
 
